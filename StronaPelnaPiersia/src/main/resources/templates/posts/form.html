@@ -79,7 +79,12 @@
 
             <div class="form-group">
                 <label for="imageFile">Zdjęcie główne:</label>
-                <input type="file" id="imageFile" name="imageFile" accept="image/*">
+                <div th:if="${post.imageUrl}" style="margin-bottom: 15px;">
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 5px;">Aktualne zdjęcie:</p>
+                    <img th:src="${post.imageUrl}" style="width: 150px; height: 100px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd;">
+                </div>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" class="form-control">
+                <small style="color: var(--text-muted);">Zostaw puste, aby zachować obecne zdjęcie.</small>
             </div>
 
             <div class="form-group">

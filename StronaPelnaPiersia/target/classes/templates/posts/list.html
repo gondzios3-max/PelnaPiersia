@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Panel Admina - Lista Postów</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span>Panel Admina</span>
+            </a>
+            <nav>
+                <a href="/posts/stats" class="btn-secondary">Statystyki</a>
+                <a href="/" class="btn-secondary">Wróć do strony</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn-secondary">Wyloguj</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Zarządzanie Postami</h1>
+            <a href="/posts/new" class="btn">Dodaj nowy post</a>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Tytuł</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Data</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="post : ${posts}">
+                    <td style="padding: 12px; border-bottom: 1px solid #eee;" th:text="${post.title}">Tytuł</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #eee;" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">Data</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                        <a th:href="@{/posts/edit/{id}(id=${post.id})}" class="btn-edit">Edytuj</a>
+                        <a th:href="@{/posts/delete/{id}(id=${post.id})}" class="btn-delete" onclick="return confirm('Czy na pewno chcesz usunąć?')">Usuń</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

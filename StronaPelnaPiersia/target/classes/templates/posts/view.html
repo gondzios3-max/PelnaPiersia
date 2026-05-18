@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${post.title} + ' - Pełną Piersią'">Post</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <span>Pełną Piersią</span>
+            </a>
+            <nav>
+                <a href="/" class="btn-secondary">Wróć do strony</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container container-fixed">
+        <article class="post-detail">
+            <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" class="post-detail-image" alt="Zdjęcie posta">
+            <h1 th:text="${post.title}">Tytuł</h1>
+            
+            <div class="post-stats-bar">
+                <div class="stats-left">
+                    <span><i class="far fa-eye"></i> <span th:text="${post.viewCount}">0</span> wyświetleń</span>
+                    <span><i class="far fa-comment"></i> <span th:text="${post.comments.size()}">0</span> komentarzy</span>
+                    <span><i class="far fa-calendar-alt"></i> <span th:text="${#temporals.format(post.createdAt, 'dd MMMM yyyy')}">Data</span></span>
+                </div>
+                <div class="reactions">
+                    <a th:href="@{/posts/react/{id}/like(id=${post.id})}" class="reaction-btn">
+                        <i class="far fa-thumbs-up"></i> <span th:text="${post.likeCount}">0</span>
+                    </a>
+                    <a th:href="@{/posts/react/{id}/heart(id=${post.id})}" class="reaction-btn heart">
+                        <i class="far fa-heart"></i> <span th:text="${post.heartCount}">0</span>
+                    </a>
+                    <a th:href="@{/posts/react/{id}/sad(id=${post.id})}" class="reaction-btn sad">
+                        <i class="far fa-frown"></i> <span th:text="${post.sadCount}">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="post-full-content" th:utext="${post.content}">
+                Treść posta...
+            </div>
+
+            <!-- Komentarze -->
+            <section class="comments-section">
+                <h3>Komentarze (<span th:text="${post.comments.size()}">0</span>)</h3>
+                
+                <div class="comment-form-container">
+                    <h4>Dodaj komentarz</h4>
+                    <form th:action="@{/posts/comment/{id}(id=${post.id})}" th:object="${newComment}" method="post">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <input type="text" th:field="*{authorName}" placeholder="Twoje imię / Nick" required>
+                            <input type="email" th:field="*{authorEmail}" placeholder="Twój e-mail" required>
+                        </div>
+                        <textarea th:field="*{content}" rows="4" placeholder="Napisz co myślisz..." required></textarea>
+                        <button type="submit" class="btn" style="margin-top: 10px;">Opublikuj komentarz</button>
+                    </form>
+                </div>
+
+                <div class="comments-list">
+                    <div th:each="comment : ${post.comments}" class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author" th:text="${comment.authorName}">Autor</span>
+                            <span class="comment-date" th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">Data</span>
+                            <a th:href="@{/posts/comment/delete/{postId}/{commentId}(postId=${post.id}, commentId=${comment.id})}" 
+                               sec:authorize="isAuthenticated()" 
+                               class="delete-comment-link"
+                               onclick="return confirm('Usunąć ten komentarz?')">Usuń</a>
+                        </div>
+                        <div class="comment-content" th:text="${comment.content}">Treść...</div>
+                    </div>
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <footer th:replace="~{index :: footer}"></footer>
+</body>
+</html>

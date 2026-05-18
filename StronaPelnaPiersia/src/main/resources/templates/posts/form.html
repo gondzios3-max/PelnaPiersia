@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${post.id == null ? 'Nowy Post' : 'Edytuj Post'}">Post</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Quill.js - Całkowicie darmowy, nowoczesny i bez banerów API -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <style>
+        .ql-container {
+            min-height: 400px;
+            font-size: 16px;
+            background: white;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .ql-toolbar {
+            background: #f8f9fa;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .ai-format-btn {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+            transition: all 0.3s ease;
+        }
+        .ai-format-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+        }
+        .container {
+            max-width: 900px !important;
+            margin: 30px auto;
+        }
+        /* Ukrywamy oryginalny textarea, bo Quill używa swojego kontenera */
+        #content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${post.id == null ? 'Nowy Post' : 'Edytuj Post'}">Post</h1>
+        <form th:action="@{/posts}" th:object="${post}" method="post" enctype="multipart/form-data" id="postForm">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{createdAt}">
+            <input type="hidden" th:field="*{imageUrl}">
+            <input type="hidden" th:field="*{viewCount}">
+            <input type="hidden" th:field="*{likeCount}">
+            <input type="hidden" th:field="*{heartCount}">
+            <input type="hidden" th:field="*{sadCount}">
+            
+            <div class="form-group">
+                <label for="title">Tytuł posta:</label>
+                <input type="text" id="title" th:field="*{title}" required placeholder="Wpisz chwytliwy tytuł...">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Kategoria:</label>
+                <select id="category" th:field="*{category}" class="form-control">
+                    <option value="Karmienie">Karmienie</option>
+                    <option value="Zdrowie">Zdrowie</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Porady">Porady</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="imageFile">Zdjęcie główne:</label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="summary">Krótki wstęp (widoczny na stronie głównej):</label>
+                <textarea id="summary" th:field="*{summary}" rows="3" required placeholder="Krótki opis zachęcający do przeczytania..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Pełna treść posta:</label>
+                
+                <button type="button" class="ai-format-btn" onclick="magicAIFormat()">
+                    <i class="fas fa-wand-magic-sparkles"></i> MAGICZNE FORMATOWANIE AI
+                </button>
+
+                <!-- Kontener dla Quilla -->
+                <div id="editor-container"></div>
+                <!-- Ukryte pole, które prześle dane do Javy -->
+                <textarea id="content" th:field="*{content}"></textarea>
+            </div>
+            
+            <div class="actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                <button type="submit" class="btn" style="padding: 15px 40px; font-size: 16px;">ZAPISZ I PUBLIKUJ</button>
+                <a href="/posts" class="btn-secondary" style="padding: 15px 30px;">Anuluj</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        var quill = new Quill('#editor-container', {
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'blockquote', 'image'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Zacznij pisać treść swojego posta tutaj...',
+            theme: 'snow'
+        });
+
+        // Załaduj istniejącą treść do edytora
+        var initialContent = document.getElementById('content').value;
+        if (initialContent) {
+            quill.root.innerHTML = initialContent;
+        }
+
+        // Przed wysłaniem formularza, skopiuj treść z Quilla do ukrytego textarea
+        document.getElementById('postForm').onsubmit = function() {
+            var content = document.querySelector('textarea[name="content"]');
+            content.value = quill.root.innerHTML;
+        };
+
+        function magicAIFormat() {
+            let rawText = quill.getText();
+            
+            if (!rawText || rawText.trim().length < 10) {
+                alert("Wpisz najpierw jakiś tekst, aby AI mogło go sformatować!");
+                return;
+            }
+
+            let formatted = rawText
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/([.!?])\s*(?=[A-ZĄĆĘŁŃÓŚŹŻ])/g, "$1|")
+                .split('|');
+
+            let finalHtml = "";
+            let paragraph = [];
+
+            formatted.forEach((sentence, index) => {
+                paragraph.push(sentence);
+                if (paragraph.length >= 3 || sentence.length > 150) {
+                    let pText = paragraph.join(' ');
+                    let sentencesInP = pText.split('. ');
+                    if (sentencesInP.length > 1) {
+                        finalHtml += `<p><strong>${sentencesInP[0]}.</strong> ${sentencesInP.slice(1).join('. ')}</p>`;
+                    } else {
+                        finalHtml += `<p>${pText}</p>`;
+                    }
+                    paragraph = [];
+                }
+            });
+
+            if (paragraph.length > 0) {
+                finalHtml += `<p>${paragraph.join(' ')}</p>`;
+            }
+
+            quill.root.innerHTML = finalHtml;
+        }
+    </script>
+</body>
+</html>

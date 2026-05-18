@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Strona Pełna Piersią</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="is-loading">
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img th:src="@{/images/logo.png}" alt="Logo" class="splash-logo" onerror="this.style.display='none'">
+            <div class="splash-loader"></div>
+            <h1 class="splash-text">Pełną Piersią</h1>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-container container-fixed">
+            <a href="/" class="logo">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <span>Pełną Piersią</span>
+            </a>
+            <nav>
+                <a th:href="@{/posts}" class="btn-secondary" sec:authorize="isAuthenticated()">Panel Admina</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;" sec:authorize="isAuthenticated()">
+                    <button type="submit" class="btn-secondary">Wyloguj</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="banner container-fixed">
+        <div class="banner-left">
+            <img th:src="@{/images/banner.jpg}" alt="Banner" onerror="this.parentElement.style.display='none'">
+        </div>
+        <div class="banner-right">
+            <img th:src="@{/images/obraz.jpg}" alt="Obraz" onerror="this.parentElement.style.display='none'">
+        </div>
+    </div>
+
+    <main class="main-layout container-fixed">
+        <!-- Middle: Posts -->
+        <section class="content-area">
+            <div th:each="post : ${posts}" class="post-card">
+                <div class="post-category-tag" th:text="${post.category != null ? post.category : 'Blog'}">Karmienie</div>
+                <div class="post-image-wrapper">
+                    <div class="post-image-container">
+                        <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" class="post-card-img" alt="Post Image">
+                        <img th:unless="${post.imageUrl}" th:src="@{/images/banner.jpg}" class="post-card-img" alt="Default Image">
+                    </div>
+                </div>
+                <div class="post-info">
+                    <h2 th:text="${post.title}">Tytuł posta</h2>
+                    <div class="post-summary" th:text="${post.summary}">
+                        Krótki opis posta...
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <a th:href="@{/posts/view/{id}(id=${post.id})}" class="read-more">Czytaj dalej <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></a>
+                        <div style="color: #999; font-size: 13px; display: flex; gap: 15px;">
+                            <span><i class="far fa-eye"></i> <span th:text="${post.viewCount}"></span></span>
+                            <span><i class="far fa-comment"></i> <span th:text="${post.comments.size()}"></span></span>
+                            <span><i class="far fa-calendar-alt"></i> <span th:text="${#temporals.format(post.createdAt, 'dd.MM.yyyy')}"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(posts)}" class="post-card" style="padding: 40px; text-align: center; display: block;">
+                <p>Brak postów do wyświetlenia. Zaloguj się, aby dodać pierwszy post!</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" th:if="${totalPages > 1}">
+                <a th:href="@{/(page=${currentPage - 1})}" th:if="${currentPage > 0}" class="page-link">
+                    <i class="fas fa-chevron-left"></i> Poprzednia
+                </a>
+                
+                <div class="page-numbers">
+                    <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                       th:href="@{/(page=${i})}"
+                       th:text="${i + 1}"
+                       th:classappend="${i == currentPage} ? 'active' : ''"
+                       class="page-link">1</a>
+                </div>
+
+                <a th:href="@{/(page=${currentPage + 1})}" th:if="${currentPage < totalPages - 1}" class="page-link">
+                    Następna <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- Right: Sidebar -->
+        <aside class="sidebar">
+            <!-- Search Section -->
+            <div class="sidebar-section">
+                <h3>Szukaj</h3>
+                <form action="/" method="get" class="search-box">
+                    <input type="text" name="search" placeholder="Czego szukasz?">
+                    <button type="submit" style="background:none; border:none; color: var(--text-muted); cursor:pointer;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Categories Section -->
+            <div class="sidebar-section">
+                <h3>Kategorie</h3>
+                <ul class="category-list">
+                    <li>
+                        <a href="/?category=Karmienie">
+                            <span>Karmienie <span class="category-count" th:text="'(' + ${categoryCounts['Karmienie'] ?: 0} + ')'"></span></span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/?category=Zdrowie">
+                            <span>Zdrowie <span class="category-count" th:text="'(' + ${categoryCounts['Zdrowie'] ?: 0} + ')'"></span></span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/?category=Lifestyle">
+                            <span>Lifestyle <span class="category-count" th:text="'(' + ${categoryCounts['Lifestyle'] ?: 0} + ')'"></span></span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/?category=Porady">
+                            <span>Porady <span class="category-count" th:text="'(' + ${categoryCounts['Porady'] ?: 0} + ')'"></span></span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Newsletter Section -->
+            <div class="newsletter-box">
+                <i class="fas fa-paper-plane" style="font-size: 30px; margin-bottom: 15px;"></i>
+                <h4>Newsletter</h4>
+                <p>Otrzymuj powiadomienia o nowych postach!</p>
+                <input type="email" placeholder="Twój e-mail">
+                <button class="btn" style="width:100%; background: white; color: var(--primary-color); font-weight: bold;">Zapisz się</button>
+            </div>
+        </aside>
+    </main>
+
+    <footer>
+        <div class="footer-container container-fixed">
+            <div class="footer-section">
+                <h4>O nas</h4>
+                <p>Strona Pełną Piersią to miejsce, gdzie dzielimy się pasją i ważnymi chwilami. Zapraszamy do regularnego odwiedzania!</p>
+            </div>
+            <div class="footer-section">
+                <h4>Kontakt</h4>
+                <p>Email: kontakt@pelnapiersia.pl</p>
+                <p>Telefon: +48 123 456 789</p>
+                <p>Adres: ul. Przykładowa 1, Warszawa</p>
+            </div>
+            <div class="footer-section">
+                <h4>Social Media</h4>
+                <div class="social-icons-footer">
+                    <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://pinterest.com" target="_blank"><i class="fab fa-pinterest"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Pełną Piersią. Wszystkie prawa zastrzeżone.</p>
+            <a th:href="@{/login}" class="admin-login-link" sec:authorize="!isAuthenticated()">
+                <span class="admin-icon"></span>
+                Panel Admina
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ukryj splash screen po 1.5 sekundy
+            setTimeout(function() {
+                const splash = document.getElementById('splash-screen');
+                splash.classList.add('hidden');
+                document.body.classList.remove('is-loading');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
